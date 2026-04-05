@@ -239,11 +239,18 @@ LLGlobalValue::LinkageTypes DtoLinkageOnly(Dsymbol *sym) {
   if (potentialLambda->isFuncLiteralDeclaration())
     return LLGlobalValue::LinkOnceODRLinkage;
 
+  if (auto cd = sym->isClassDeclaration()) {
+    if (cd->classKind == ClassKind::objc) {
+      return templateLinkage;
+    }
+  }
+
   if (sym->isInstantiated())
     return templateLinkage;
 
   return LLGlobalValue::ExternalLinkage;
 }
+
 }
 
 LinkageWithCOMDAT DtoLinkage(Dsymbol *sym) {

@@ -214,8 +214,8 @@ public:
     // Objective-C class structure is initialized by calling getClassRef.
     if (decl->classKind == ClassKind::objc) {
       gIR->objc.getClass(decl);
-      return;
     }
+
 
     IrClass *ir = getIrAggr(decl);
 

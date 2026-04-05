@@ -517,15 +517,19 @@ class DeclareOrDefineVisitor : public Visitor {
     LLGlobalVariable *gvar = ir->getClassInfoSymbol();
     irg->value = gvar;
 
-    if (cd->classKind == ClassKind::objc && !gvar->hasInitializer()) {
-      ir->getClassInfoSymbol(/*define=*/true);
-      gvar->setLinkage(llvm::GlobalValue::LinkOnceODRLinkage);
-      // Hidden visibility to prevent it from leaking into other dynamic libraries
-      // if not required by the public API.
-      gvar->setVisibility(llvm::GlobalValue::HiddenVisibility);
+    if (cd->classKind == ClassKind::objc) {
+      if (!gvar->hasInitializer()) {
+        ir->getClassInfoSymbol(/*define=*/true);
+      }
+      if (!ir->getInitSymbol()->hasInitializer()) {
+        ir->getInitSymbol(/*define=*/true);
+      }
+      if (!cd->isInterfaceDeclaration() && !ir->getVtblSymbol()->hasInitializer()) {
+        ir->getVtblSymbol(/*define=*/true);
+      }
     }
-
   }
+
 
 
   // Build all other TypeInfos.
