@@ -217,14 +217,18 @@ IrAggr::createInitializerConstant(const VarInitMap &explicitInitializers) {
                        isPacked);
 
   // tail padding?
-  const size_t structsize = size(aggrdecl, Loc());
+  size_t structsize = size(aggrdecl, Loc());
+  if (cd && cd->classKind == ClassKind::objc && structsize < target.ptrsize) {
+    structsize = target.ptrsize;
+  }
+
   if (offset < structsize) {
     add_zeros(constants, offset, structsize);
   } else if (offset > structsize) {
-    error(Loc(), "ICE: IR aggregate constant size (%u) exceeds the frontend size (%u) for %s",
-          offset, (unsigned)structsize, aggrdecl->toChars());
+    error(Loc(), "ICE: IR aggregate constant size exceeds the frontend size");
     fatal();
   }
+
 
 
   // get LL field types

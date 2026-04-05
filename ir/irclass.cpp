@@ -376,11 +376,12 @@ LLConstant *IrClass::getClassInfoInit() {
   b.push_string(name);
 
   // void*[] vtbl
-  if (isInterface) {
+  if (isInterface || cd->classKind == ClassKind::objc) {
     b.push_array(0, getNullPtr());
   } else {
     b.push_array(cd->vtbl.length, getVtblSymbol());
   }
+
 
   // Interface[] interfaces
   b.push(getClassInfoInterfaces());
