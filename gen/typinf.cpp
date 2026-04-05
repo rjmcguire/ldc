@@ -513,8 +513,20 @@ class DeclareOrDefineVisitor : public Visitor {
     DtoResolveClass(cd);
 
     IrGlobal *irg = getIrGlobal(decl, true);
-    irg->value = getIrAggr(cd)->getClassInfoSymbol();
+    IrClass *ir = getIrAggr(cd);
+    LLGlobalVariable *gvar = ir->getClassInfoSymbol();
+    irg->value = gvar;
+
+    if (cd->classKind == ClassKind::objc && !gvar->hasInitializer()) {
+      ir->getClassInfoSymbol(/*define=*/true);
+      gvar->setLinkage(llvm::GlobalValue::LinkOnceODRLinkage);
+      // Hidden visibility to prevent it from leaking into other dynamic libraries
+      // if not required by the public API.
+      gvar->setVisibility(llvm::GlobalValue::HiddenVisibility);
+    }
+
   }
+
 
   // Build all other TypeInfos.
   void visit(TypeInfoDeclaration *decl) override { buildTypeInfo(decl); }
