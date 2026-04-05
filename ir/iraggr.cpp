@@ -221,9 +221,11 @@ IrAggr::createInitializerConstant(const VarInitMap &explicitInitializers) {
   if (offset < structsize) {
     add_zeros(constants, offset, structsize);
   } else if (offset > structsize) {
-    error(Loc(), "ICE: IR aggregate constant size exceeds the frontend size");
+    error(Loc(), "ICE: IR aggregate constant size (%u) exceeds the frontend size (%u) for %s",
+          offset, (unsigned)structsize, aggrdecl->toChars());
     fatal();
   }
+
 
   // get LL field types
   llvm::SmallVector<llvm::Type *, 16> types;
