@@ -191,16 +191,24 @@ IrAggr::createInitializerConstant(const VarInitMap &explicitInitializers) {
   auto cd = aggrdecl->isClassDeclaration();
   IrClass *irClass = cd ? static_cast<IrClass *>(this) : nullptr;
   if (irClass) {
-    // add vtbl
-    constants.push_back(irClass->getVtblSymbol());
-    offset += target.ptrsize;
-
-    // add monitor (except for C++ classes)
-    if (!cd->isCPPclass()) {
+    if (cd->classKind == ClassKind::objc) {
+      // Objective-C classes only have an ISA pointer as the first (and only)
+      // hidden member.
       constants.push_back(getNullPtr());
       offset += target.ptrsize;
+    } else {
+      // add vtbl
+      constants.push_back(irClass->getVtblSymbol());
+      offset += target.ptrsize;
+
+      // add monitor (except for C++ classes)
+      if (!cd->isCPPclass()) {
+        constants.push_back(getNullPtr());
+        offset += target.ptrsize;
+      }
     }
   }
+
 
   // Add the initializers for the member fields.
   unsigned dummy = 0;
