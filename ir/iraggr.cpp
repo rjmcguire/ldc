@@ -190,12 +190,19 @@ IrAggr::createInitializerConstant(const VarInitMap &explicitInitializers) {
 
   auto cd = aggrdecl->isClassDeclaration();
   IrClass *irClass = cd ? static_cast<IrClass *>(this) : nullptr;
+  unsigned dummy = 0;
+  bool isPacked = false;
+
   if (irClass) {
     if (cd->classKind == ClassKind::objc) {
-      // Objective-C classes only have an ISA pointer as the first (and only)
-      // hidden member.
+      // Objective-C classes only have an ISA pointer as the first (and only /
+      // in IR) hidden member.
       constants.push_back(getNullPtr());
       offset += target.ptrsize;
+
+      // Skip fields for Objective-C classes, as they are skipped in
+      // IrTypeClass::getMemoryLLType() too.
+      goto fields_done;
     } else {
       // add vtbl
       constants.push_back(irClass->getVtblSymbol());
@@ -209,12 +216,12 @@ IrAggr::createInitializerConstant(const VarInitMap &explicitInitializers) {
     }
   }
 
-
   // Add the initializers for the member fields.
-  unsigned dummy = 0;
-  bool isPacked = false;
   addFieldInitializers(constants, explicitInitializers, aggrdecl, offset, dummy,
                        isPacked);
+
+fields_done:
+
 
   // tail padding?
   size_t structsize = size(aggrdecl, Loc());
@@ -223,6 +230,7 @@ IrAggr::createInitializerConstant(const VarInitMap &explicitInitializers) {
   }
 
   if (offset < structsize) {
+
     add_zeros(constants, offset, structsize);
   } else if (offset > structsize) {
     error(Loc(), "ICE: IR aggregate constant size exceeds the frontend size");

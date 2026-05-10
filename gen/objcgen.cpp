@@ -514,8 +514,11 @@ LLConstant *ObjCState::getClassTable(ClassDeclaration *decl) {
   this->retain(table);
   
   // Extern tables don't need a body.
-  if (decl->objc.isExtern)
+  // We also only define the table body in the home module of the class.
+  if (decl->objc.isExtern || (decl->getModule() != gIR->dmodule)) {
     return table;
+  }
+
 
   LLConstantList members;
   members.push_back(getClassTable(objcGetMetaClass(decl)));   // isa
